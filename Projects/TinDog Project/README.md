@@ -1,6 +1,6 @@
 # TinDog
 
-Project is part of the [Web Development Bootcamp](https://www.udemy.com/course/the-complete-web-development-bootcamp/), it was built using HTML, CSS and bootstrap to build this website.
+Project is part of the [Web Development Bootcamp](https://www.udemy.com/course/the-complete-web-development-bootcamp/), it was built using HTML, CSS and Bootstrap.
 
 <p align="center">
     <img src="images/tindog.png" width="700px" alt="tindog" />
@@ -14,18 +14,12 @@ Project is part of the [Web Development Bootcamp](https://www.udemy.com/course/t
 
 #### 📝 Table of Contents
 
-- [About](#about)
 - [Getting Started](#getting_started)
 - [Built Using](#built_using)
-
-#### 🧐 About <a name = "about"></a>
-
-Write about 1-2 paragraphs describing the purpose of your project.
 
 #### 🏁 Getting Started <a name = "getting_started"></a>
 
 Clone the project and open the `index.html` file.
-
 
 #### ⛏️ Built Using <a name = "built_using"></a>
 
