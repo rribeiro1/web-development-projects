@@ -7,7 +7,7 @@ Project is part of the [Web Development Bootcamp](https://www.udemy.com/course/t
 </p>
 
 <p align="center">
-  <a href="https://www.linkedin.com/in/eliasgcf/"><img alt="Made by" src="https://img.shields.io/badge/made%20by-Rafael%20Ribeiro-%23ff4c68"></a>
+  <a href="https://www.linkedin.com/in/rribeiro10/"><img alt="Made by" src="https://img.shields.io/badge/made%20by-Rafael%20Ribeiro-%23ff4c68"></a>
   <img alt="Repository size" src="https://img.shields.io/github/repo-size/EliasGcf/nlw-3?color=ff4c68">
   <a href="https://github.com/rribeiro1/web-development-projects/commits/master"><img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/rribeiro1/web-development-projects?color=ef8172"></a>
 </p>
