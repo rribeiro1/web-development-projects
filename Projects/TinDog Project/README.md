@@ -3,7 +3,7 @@
 Project is part of the [Web Development Bootcamp](https://www.udemy.com/course/the-complete-web-development-bootcamp/), it was built using HTML, CSS and bootstrap to build this website.
 
 <p align="center">
-    <img src="images/tindog.png" width="500px" alt="tindog" />
+    <img src="images/tindog.png" width="700px" alt="tindog" />
 </p>
 
 <p align="center">
