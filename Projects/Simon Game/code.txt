@@ -1,0 +1,124 @@
+# Data projects deployment using circleci user from operation account:
+
+## In the operations account (It was done by me already):
+
+1. Go to modules > auth > operational-account > policies.tf
+    - Create a new policy e.g “AllowDataProjectsDeployment”
+    - This policy will assume a role in the BI account, something like this:
+
+``` tf
+resource "aws_iam_policy" "data_projects_deployment_policy" {
+  name        = "AllowDataProjectsDeployment"
+  description = "Allow assume role to deploy data projects in the BI account."
+
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : {
+      Effect : "Allow",
+      Action : "sts:AssumeRole",
+      Resource : [
+        "arn:aws:iam::${var.bi_account}:role/CircleCiDataDeploymentRole"
+      ]
+    }
+  })
+}
+```
+
+**Notes:**
+> CircleCiDataDeploymentRole is a role that should be created in the BI account and it will trust in the operation account to assume the role.
+
+## In the BI account:
+
+1. Create a new file `circleci-deployment.tf`
+2. The content should be something like this:
+
+```tf
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_policy" "circleci_data_deployment" {
+  name        = "AllowDataProjectsDeploymentPolicy"
+  path        = "/"
+  description = "It has the necessary policies that allows circleci user to deploy data projects in AWS"
+  
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
+      {
+        Effect : "Allow",
+        Action : [
+          "ecr:GetAuthorizationToken"
+        ],
+        Resource : "*"
+      },
+      {
+        Effect : "Allow",
+        Action : [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage"
+        ],
+        Resource : "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/labtwin/*"
+      }
+    ]
+  })
+}
+
+# This is the role that `circle_ci` user will assume from ops account.
+# It trusts in the operation account.
+
+resource "aws_iam_role" "circleci_data_deployment" {
+  name = "CircleCiDataDeploymentRole"
+
+  assume_role_policy = jsonencode({
+    Version: "2012-10-17",
+    Statement: {
+        Effect: "Allow",
+        Principal: { "AWS": "arn:aws:iam::${module.global.operations_account_id}:root" },
+        Action: "sts:AssumeRole"
+    }
+  })
+}
+
+resource "aws_iam_policy_attachment" "circleci_data_deployment" {
+  name       = "Data Deployment Policy Attachment"
+  policy_arn = aws_iam_policy.circleci_data_deployment.arn
+  roles = [
+    aws_iam_role.circleci_data_deployment.name
+  ]
+}
+```
+
+## Job to push images to ECR:
+
+```yaml
+  build_container:
+      docker:
+        - image: rhinogram/node-awscli:latest
+
+      working_directory: ~/app
+
+      steps:
+        - setup_remote_docker
+        - attach_workspace:
+            at: ~/app
+        - run:
+            name: "Build & Push Docker Image"
+            command: |
+              # Assuming CircleCiDataDeploymentRole  
+              unset  AWS_SESSION_TOKEN
+              temp_credentials=$(aws sts assume-role --role-arn "arn:aws:iam::177085113002:role/CircleCiDataDeploymentRole" --duration-seconds 900 --role-session-name "deployment")
+              export AWS_ACCESS_KEY_ID=$(echo "$temp_credentials" | jq .Credentials.AccessKeyId | xargs)
+              export AWS_SECRET_ACCESS_KEY=$(echo "$temp_credentials" | jq .Credentials.SecretAccessKey | xargs)
+              export AWS_SESSION_TOKEN=$(echo "$temp_credentials" | jq .Credentials.SessionToken | xargs)
+
+              # Log into ECR, build and push images
+              cp .circleci/Dockerfile .
+              eval $(aws ecr get-login --no-include-email)
+              docker build -t "$AWS_ECR_URL/model-pipeline:latest" -t "$AWS_ECR_URL/model-pipeline:$CIRCLE_SHA1" .
+              docker push
+```
